@@ -834,7 +834,6 @@ var WaveEngineJS = {
         this.refreshedBoudingBox = false;
         this.BoundingBox = new WaveEngineJS.BoundingBox();
         this.debugLines = false;
-        this.hasIllumination = false;
         this.color = [0, 0, 0, 1];
         this.borderColor = [0, 0, 0, 1];
 
@@ -1113,10 +1112,6 @@ var WaveEngineJS = {
         this.models = new Array();
         this.groupModels = new Array();
         this.camera = new WaveEngineJS.Camera(canvas.width, canvas.height);
-        this.light = [150, 150, 150];
-        WaveEngineJS.invert(this.light);
-        this.ambientColor = [47, 79, 79];
-        WaveEngineJS.normalize(this.light);
         this.context = null;
         try {
             this.context = canvas.getContext("2d");
@@ -1159,20 +1154,6 @@ var WaveEngineJS = {
             var position = that.groupModels.length;
             that.groupModels[position] = groupModel;
             return position;
-        };
-
-        /**
-         * Changes the light position in the scene
-         * @param {Number} x
-         * @param {Number} y
-         * @param {Number} z
-         */
-        this.changeLight = function (x, y, z) {
-            that.light[0] = x;
-            that.light[1] = y;
-            that.light[2] = z;
-            WaveEngineJS.invert(that.light);
-            WaveEngineJS.normalize(that.light);
         };
 
         /**
@@ -1408,17 +1389,12 @@ var WaveEngineJS = {
          * @param {WaveEngineJS.Model} model
          */
         this.drawSolid = function (vertices, model) {
-            var ambientColor = that.ambientColor,
-                context = that.context,
+            var context = that.context,
                 indexes = model.index,
                 pc = that.camera.getPosition(),
-                viewProj = that.camera.viewproj,
-                hasIllumination = model.hasIllumination;
-            if (!hasIllumination) {
-                that.context.fillStyle = model.fillColor;
-                that.context.strokeStyle = model.strokeColor;
-            }
-
+                viewProj = that.camera.viewproj;
+            that.context.fillStyle = model.fillColor;
+            that.context.strokeStyle = model.strokeColor;
             var w = that.width,
                 h = that.height;
             for (var i = indexes.length / 3; i--;) {
@@ -1437,29 +1413,6 @@ var WaveEngineJS = {
                 var tita = WaveEngineJS.dotV3(c, n);
 
                 if (!model.backfaceCulling || tita < 0) {
-                    if (hasIllumination) {
-                        var modelColor = model.color,
-                            modelColorR = modelColor[0],
-                            modelColorG = modelColor[1],
-                            modelColorB = modelColor[2],
-                            modelColorA = modelColor[3],
-                            borderColor = model.borderColor,
-                            sat = WaveEngineJS.dotV3(that.light, n);
-                        if (sat < 0) {
-                            sat = 0;
-                        } else if (sat > 1) {
-                            sat = 1;
-                        }
-                        var r = sat * modelColorR + ambientColor[0],
-                            g = sat * modelColorG + ambientColor[1],
-                            b = sat * modelColorB + ambientColor[2];
-                        r = r | r;
-                        g = g | g;
-                        b = b | b;
-                        var color = rgba + r + comma + g + comma + b + comma;
-                        that.context.fillStyle = color + modelColorA + close;
-                        that.context.strokeStyle = color + borderColor[3] + close;
-                    }
                     context.beginPath();
 
                     var vertex1 = WaveEngineJS.convert(p1, viewProj, w, h),
@@ -1491,27 +1444,6 @@ var WaveEngineJS = {
                     tita = WaveEngineJS.dotV3(c, n);
 
                 if (!model.backfaceCulling || tita < 0) {
-                    if (hasIllumination) {
-                        var sat = WaveEngineJS.dotV3(that.light, n);
-                        if (sat < 0) {
-                            sat = 0;
-                        } else if (sat > 1) {
-                            sat = 1;
-                        }
-
-                        var r = sat * modelColorR + ambientColor[0],
-                            g = sat * modelColorG + ambientColor[1],
-                            b = sat * modelColorB + ambientColor[2];
-
-                        r = r | r;
-                        g = g | g;
-                        b = b | b;
-
-                        var color = rgb + r + comma + g + comma + b + close;
-                        context.fillStyle = color;
-                        context.strokeStyle = color;
-                    }
-
                     context.beginPath();
                     var orig = WaveEngineJS.convert(vertices[polygon[0]], viewProj, w, h);
                     context.moveTo(orig[0], orig[1]);
