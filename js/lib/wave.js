@@ -1124,7 +1124,6 @@ var WaveEngineJS = {
         this.height = canvas.height;
         this.POINTS = "POINTS";
         this.WIRE = "WIRE";
-        this.SOLID = "SOLID";
 
         /**
          * Set the scene camera (normal or sphere camera)
@@ -1243,10 +1242,6 @@ var WaveEngineJS = {
                         that.drawWire(vertices, model);
                         that.context.closePath();
                         break;
-                    case that.SOLID:
-                        that.drawSolid(vertices, model);
-                        that.drawWire(vertices, model);
-                        break;
                     default:
                         that.drawPoints(vertices);
                         break;
@@ -1287,10 +1282,6 @@ var WaveEngineJS = {
                             that.context.beginPath();
                             that.drawWire(modelsVertices[k], models[k]);
                             that.context.closePath();
-                            break;
-                        case that.SOLID:
-                            that.drawSolid(modelsVertices[k], models[k]);
-                            that.drawWire(modelsVertices[k], models[k]);
                             break;
                         default:
                             that.drawPoints(vertices);
@@ -1381,82 +1372,6 @@ var WaveEngineJS = {
                 }
             }
             that.context.stroke();
-        };
-
-        /**
-         * Draws a solid model
-         * @param {Array} vertices Model vertices
-         * @param {WaveEngineJS.Model} model
-         */
-        this.drawSolid = function (vertices, model) {
-            var context = that.context,
-                indexes = model.index,
-                pc = that.camera.getPosition(),
-                viewProj = that.camera.viewproj;
-            that.context.fillStyle = model.fillColor;
-            that.context.strokeStyle = model.strokeColor;
-            var w = that.width,
-                h = that.height;
-            for (var i = indexes.length / 3; i--;) {
-                var index = i * 3,
-                    p1 = vertices[indexes[index]],
-                    p2 = vertices[indexes[index + 1]],
-                    p3 = vertices[indexes[index + 2]],
-                    v1 = WaveEngineJS.substractV3(p1, p2),
-                    v2 = WaveEngineJS.substractV3(p3, p2),
-                    n = WaveEngineJS.crossV3(v1, v2);
-
-                WaveEngineJS.normalize(n);
-
-                var c = WaveEngineJS.substractV3(pc, p1);
-
-                var tita = WaveEngineJS.dotV3(c, n);
-
-                if (!model.backfaceCulling || tita < 0) {
-                    context.beginPath();
-
-                    var vertex1 = WaveEngineJS.convert(p1, viewProj, w, h),
-                        vertex2 = WaveEngineJS.convert(p2, viewProj, w, h),
-                        vertex3 = WaveEngineJS.convert(p3, viewProj, w, h),
-                        v10 = Math.floor(vertex1[0]),
-                        v11 = Math.floor(vertex1[1]);
-                    context.moveTo(v10, v11);
-                    context.lineTo(Math.floor(vertex2[0]), Math.floor(vertex2[1]));
-                    context.lineTo(Math.floor(vertex3[0]), Math.floor(vertex3[1]));
-                    context.lineTo(v10, v11);
-                    context.closePath();
-                    context.fill();
-                }
-            }
-
-            var polygons = model.poligons;
-
-            for (var i = polygons.length; i--;) {
-                var polygon = polygons[i],
-                    index = 0,
-                    p1 = vertices[polygon[index]],
-                    p2 = vertices[polygon[index + 1]],
-                    p3 = vertices[polygon[index + 2]],
-                    v1 = WaveEngineJS.substractV3(p1, p2),
-                    v2 = WaveEngineJS.substractV3(p3, p2),
-                    n = WaveEngineJS.crossV3(v1, v2),
-                    c = WaveEngineJS.substractV3(pc, p1),
-                    tita = WaveEngineJS.dotV3(c, n);
-
-                if (!model.backfaceCulling || tita < 0) {
-                    context.beginPath();
-                    var orig = WaveEngineJS.convert(vertices[polygon[0]], viewProj, w, h);
-                    context.moveTo(orig[0], orig[1]);
-                    var ll = polygon.length;
-                    for (var j = 1; j < ll; j++) {
-                        var aux = WaveEngineJS.convert(vertices[polygon[j]], viewProj, w, h);
-                        context.lineTo(aux[0], aux[1]);
-                    }
-                    context.lineTo(orig[0], orig[1]);
-                    context.closePath();
-                    context.fill();
-                }
-            }
         };
 
         /**

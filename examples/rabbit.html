@@ -31,16 +31,13 @@
                 window.requestAnimationFrame(animate);
             }
 
-            var drawType = scene.SOLID;
+            var drawType = scene.WIRE;
 
             function Draw() {
                 var date = new Date();
                 switch (drawType) {
                     case scene.WIRE:
                         scene.render(scene.WIRE);
-                        break;
-                    case scene.SOLID:
-                        scene.render(scene.SOLID);
                         break;
                     case scene.POINTS:
                         scene.render(scene.POINTS);
