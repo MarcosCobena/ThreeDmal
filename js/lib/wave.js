@@ -197,40 +197,6 @@ var WaveEngineJS = {
     },
 
     /**
-     * Creates a Shadow Matrix
-     * @param {Array} plane Plane where the shadow will be projected
-     * @param {Array} light Light position
-     * @param {Number} d Distance to the plane
-     * @return {WaveEngineJS.Matrix}
-     */
-    createShadowMatrix:function (plane, light, d) {
-        var matrix = new WaveEngineJS.Matrix(),
-            num = ((plane[0] * light[0]) + (plane[1] * light[1])) + (plane[2] * light[2]),
-            num5 = -plane[0],
-            num4 = -plane[1],
-            num3 = -plane[2],
-            num2 = -d;
-
-        matrix[0] = (num5 * light[0]) + num;
-        matrix[1] = num5 * light[1];
-        matrix[2] = num5 * light[2];
-        matrix[3] = 0;
-        matrix[4] = num4 * light[0];
-        matrix[5] = (num4 * light[1]) + num;
-        matrix[6] = num4 * light[2];
-        matrix[7] = 0;
-        matrix[8] = num3 * light[0];
-        matrix[9] = num3 * light[1];
-        matrix[10] = (num3 * light[2]) + num;
-        matrix[11] = 0;
-        matrix[12] = num2 * light[0];
-        matrix[13] = num2 * light[1];
-        matrix[14] = num2 * light[2];
-        matrix[15] = num;
-        return matrix;
-    },
-
-    /**
      * Generates a Perspective Field Of View Matrix
      * @param {Number} fieldOfView
      * @param {Number} aspectRatio
@@ -864,7 +830,6 @@ var WaveEngineJS = {
         this.rotation = [0, 0, 0];
         this.scale = [1, 1, 1];
         this.backfaceCulling = true;
-        this.hasShadow = false;
         this.world = new WaveEngineJS.MatrixIdentity();
         this.refreshedBoudingBox = false;
         this.BoundingBox = new WaveEngineJS.BoundingBox();
@@ -1151,7 +1116,6 @@ var WaveEngineJS = {
         this.light = [150, 150, 150];
         WaveEngineJS.invert(this.light);
         this.ambientColor = [47, 79, 79];
-        this.shadowMatrix = WaveEngineJS.createShadowMatrix([0, 1, 0], this.light, 0);
         WaveEngineJS.normalize(this.light);
         this.context = null;
         try {
@@ -1208,7 +1172,6 @@ var WaveEngineJS = {
             that.light[1] = y;
             that.light[2] = z;
             WaveEngineJS.invert(that.light);
-            that.shadowMatrix = WaveEngineJS.createShadowMatrix([0, 1, 0], that.light, 0);
             WaveEngineJS.normalize(that.light);
         };
 
@@ -1300,7 +1263,6 @@ var WaveEngineJS = {
                         that.context.closePath();
                         break;
                     case that.SOLID:
-                        that.drawShadow(vertices, model);
                         that.drawSolid(vertices, model);
                         that.drawWire(vertices, model);
                         break;
@@ -1346,7 +1308,6 @@ var WaveEngineJS = {
                             that.context.closePath();
                             break;
                         case that.SOLID:
-                            that.drawShadow(modelsVertices[k], models[k]);
                             that.drawSolid(modelsVertices[k], models[k]);
                             that.drawWire(modelsVertices[k], models[k]);
                             break;
@@ -1562,55 +1523,6 @@ var WaveEngineJS = {
                     context.lineTo(orig[0], orig[1]);
                     context.closePath();
                     context.fill();
-                }
-            }
-        };
-
-        /**
-         * Draws the model shadow
-         * @param {Array} vertices Model vertices
-         * @param {WaveEngineJS.Model} model
-         */
-        this.drawShadow = function (vertices, model) {
-            if (model.hasShadow) {
-                var shadowMatrix = WaveEngineJS.multiply(that.shadowMatrix, that.camera.viewproj);
-                that.context.fillStyle = "rgb(0,0,0)";
-                var indexes = model.index;
-                for (var i = 0; i < indexes.length / 3; i++) {
-                    var index = i * 3;
-
-                    var p1 = vertices[indexes[index]],
-                        p2 = vertices[indexes[index + 1]],
-                        p3 = vertices[indexes[index + 2]];
-                    that.context.beginPath();
-
-                    var vertex1 = WaveEngineJS.convert(p1, shadowMatrix, that.width, that.height),
-                        vertex2 = WaveEngineJS.convert(p2, shadowMatrix, that.width, that.height),
-                        vertex3 = WaveEngineJS.convert(p3, shadowMatrix, that.width, that.height);
-                    that.context.moveTo(Math.floor(vertex1[0]), Math.floor(vertex1[1]));
-                    that.context.lineTo(Math.floor(vertex2[0]), Math.floor(vertex2[1]));
-                    that.context.lineTo(Math.floor(vertex3[0]), Math.floor(vertex3[1]));
-                    that.context.lineTo(Math.floor(vertex1[0]), Math.floor(vertex1[1]));
-                    that.context.closePath();
-                    that.context.fill();
-                }
-
-                var polygons = model.poligons;
-                var l = polygons.length;
-                for (var i = 0; i < l; i++) {
-                    var polygon = polygons[i],
-                        orig = WaveEngineJS.convert(vertices[polygon[0]], shadowMatrix, that.width, that.height);
-
-                    that.context.beginPath();
-                    that.context.moveTo(orig[0], orig[1]);
-                    var ll = polygon.length;
-                    for (var j = 1; j < ll; j++) {
-                        var aux = WaveEngineJS.convert(vertices[polygon[j]], shadowMatrix, that.width, that.height);
-                        that.context.lineTo(aux[0], aux[1]);
-                    }
-                    that.context.lineTo(orig[0], orig[1]);
-                    that.context.closePath();
-                    that.context.fill();
                 }
             }
         };
