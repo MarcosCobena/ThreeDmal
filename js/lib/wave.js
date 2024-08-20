@@ -14,7 +14,6 @@ var WaveEngineJS = {
      * @type {String}
      */
     rgba:'rgba(',
-    rgb:'rgb(',
     comma:',',
     close:')',
 
@@ -694,30 +693,13 @@ var WaveEngineJS = {
         this.world = new WaveEngineJS.MatrixIdentity();
         this.refreshedBoudingBox = false;
         this.color = [0, 0, 0, 1];
-        this.borderColor = [0, 0, 0, 1];
 
         /**
-         * Changes the model color
-         * @param {Array} fillColor 3D vector
-         * @param {Array} borderColor 3D vector
+         * Changes the model's color
+         * @param {Array} color 3D vector
          */
-        this.changeColor = function (fillColor, borderColor) {
-            that.color = fillColor;
-            that.borderColor = borderColor;
-            that.updateColor();
-        };
-
-        /**
-         * Updates the canvas Stroke and Fills using a rgba color
-         */
-        this.updateColor = function () {
-            var c = that.color,
-                v = that.borderColor,
-                rgba = WaveEngineJS.rgba,
-                comma = WaveEngineJS.comma,
-                close = WaveEngineJS.close;
-            that.strokeColor = rgba + v[0] + comma + v[1] + comma + v[2] + comma + v[3] + close;
-            that.fillColor = rgba + c[0] + comma + c[1] + comma + c[2] + comma + c[3] + close;
+        this.changeColor = function (color) {
+            that.color = color;
         };
 
         /**
@@ -829,7 +811,6 @@ var WaveEngineJS = {
     Scene:function (canvas) {
         var that = this,
             rgba = WaveEngineJS.rgba,
-            rgb = WaveEngineJS.rgb,
             comma = WaveEngineJS.comma,
             close = WaveEngineJS.close;
         this.models = new Array();
@@ -902,15 +883,15 @@ var WaveEngineJS = {
         };
 
         /**
-         * Draws only the models edges
-         * @param {Array} vertices Model vertices
+         * Draws only the model's edges
+         * @param {Array} vertices Model's vertices
          * @param {WaveEngineJS.Model} model
          */
         this.drawWire = function (vertices, model) {
             var indexes = model.index,
                 pc = that.camera.getPosition(),
-                borderColor = model.borderColor;
-            that.context.strokeStyle = rgba + borderColor[0] + comma + borderColor[1] + comma + borderColor[2] + comma + borderColor[3] + close;
+                color = model.color;
+            that.context.strokeStyle = rgba + color[0] + comma + color[1] + comma + color[2] + comma + color[3] + close;
             for (var i = 0; i < indexes.length / 3; i++) {
                 var index = i * 3,
                     p1 = vertices[indexes[index]],

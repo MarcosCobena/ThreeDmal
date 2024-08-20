@@ -1,19 +1,55 @@
-<!DOCTYPE HTML>
-<html>
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>WaveJS - A 3D JavaScript library for 2D Canvas</title>
+    <title></title>
+    <script type="text/javascript" src="../js/lib/requestanimationframe.js"></script>
+    <script type="text/javascript" src="../js/lib/wave.js"></script>
+    <script type="text/javascript">
+        function onLoad() {
+            var canvas = document.getElementById("canvas");
+            var scene = new WaveEngineJS.Scene(canvas);
+            var camera = new WaveEngineJS.Camera(canvas.width, canvas.height);
+            camera.changeCameraPosition([0, 5, 5]);
+            scene.addCamera(camera);
+            var cube = new WaveEngineJS.Model();
+            cube.addVertex(1, -1, 1);
+            cube.addVertex(1, 1, 1);
+            cube.addVertex(-1, 1, 1);
+            cube.addVertex(-1, -1, 1);
+            cube.addVertex(1, -1, -1);
+            cube.addVertex(1, 1, -1);
+            cube.addVertex(-1, -1, -1);
+            cube.addVertex(-1, 1, -1);
+            cube.addPolygon([0, 1, 2, 3]);
+            cube.addPolygon([4, 5, 1, 0]);
+            cube.addPolygon([6, 7, 5, 4]);
+            cube.addPolygon([3, 2, 7, 6]);
+            cube.addPolygon([1, 5, 7, 2]);
+            cube.addPolygon([4, 0, 3, 6]);
+            scene.addModel(cube);
+            
+            window.requestAnimationFrame(animate);
+            var rotY = 0;
+            var total = document.getElementById("total");
+            function animate() {
+                var date = new Date();
+                scene.models[0].changeRotation(0, rotY, 0);
+                draw();
+                rotY -= 0.01;
+                total.textContent = new Date() - date;
+                window.requestAnimationFrame(animate);
+            }
+
+            function draw() {
+                var date = new Date();
+                scene.render();
+                total.textContent = new Date() - date;
+            }
+        }
+    </script>
 </head>
-<body>
-<h1>WaveJS</h1>
-<p>
-    Description here
-</p>
-<h2>
-    Examples
-</h2>
-<ul>
-    <li><a href="examples/sphere.html">Sphere</a></li>
-    <li><a href="examples/rabbit.html">Cute rabbit spinning</a></li>
-</ul>
+<body onload="onLoad();">
+    <canvas width="640" height="480" id="canvas">Canvas not supported.</canvas>
+    <p id="total"></p>
 </body>
 </html>
