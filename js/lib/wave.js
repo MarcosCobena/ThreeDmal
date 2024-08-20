@@ -555,119 +555,6 @@ var WaveEngineJS = {
     },
 
     /**
-     * Bounding Box is a wrapper of a Model where we can detect the click of a mouse
-     * @constructor
-     */
-    BoundingBox:function () {
-        var that = this;
-        this.min = [];
-        this.max = [];
-
-        /**
-         * Calculates if a ray intersects with the bounding box
-         * @param {WaveEngineJS.ray} ray
-         * @return {*}
-         */
-        this.Intersects = function (ray) {
-            var num = 0,
-                maxValue = Number.MAX_VALUE;
-            if (Math.abs(ray.direction[0]) < 1E-06) {
-                if ((ray.position[0] < that.min[0]) || (ray.position[0] > that.max[0])) {
-                    return null;
-                }
-            }
-            else {
-                var num11 = 1 / ray.direction[0],
-                    num8 = (that.min[0] - ray.position[0]) * num11,
-                    num7 = (that.max[0] - ray.position[0]) * num11;
-                if (num8 > num7) {
-                    var num14 = num8;
-                    num8 = num7;
-                    num7 = num14;
-                }
-                num = Math.max(num8, num);
-                maxValue = Math.min(num7, maxValue);
-                if (num > maxValue) {
-                    return null;
-                }
-            }
-            if (Math.abs(ray.direction[1]) < 1E-06) {
-                if ((ray.position[1] < that.min[1]) || (ray.position[1] > that.max[1])) {
-                    return null;
-                }
-            }
-            else {
-                var num10 = 1 / ray.direction[1],
-                    num6 = (that.min[1] - ray.position[1]) * num10,
-                    num5 = (that.max[1] - ray.position[1]) * num10;
-                if (num6 > num5) {
-                    var num13 = num6;
-                    num6 = num5;
-                    num5 = num13;
-                }
-                num = Math.max(num6, num);
-                maxValue = Math.min(num5, maxValue);
-                if (num > maxValue) {
-                    return null;
-                }
-            }
-            if (Math.abs(ray.direction[2]) < 1E-06) {
-                if ((ray.position[2] < that.min[2]) || (ray.position[2] > that.max[2])) {
-                    return null;
-                }
-            }
-            else {
-                var num9 = 1 / ray.direction[2],
-                    num4 = (that.min[2] - ray.position[2]) * num9,
-                    num3 = (that.max[2] - ray.position[2]) * num9;
-                if (num4 > num3) {
-                    var num12 = num4;
-                    num4 = num3;
-                    num3 = num12;
-                }
-                num = Math.max(num4, num);
-                maxValue = Math.min(num3, maxValue);
-                if (num > maxValue) {
-                    return null;
-                }
-            }
-            return num;
-        };
-
-        /**
-         * Returns the bounding box corners
-         * @return {Array}
-         * @constructor
-         */
-        this.GetConers = function () {
-            var min = that.min,
-                max = that.max;
-            return [
-                [min[0], max[1], max[2], 1],
-                [max[0], max[1], max[2], 1],
-                [max[0], min[1], max[2], 1],
-                [min[0], min[1], max[2], 1],
-                [min[0], max[1], min[2], 1],
-                [max[0], max[1], min[2], 1],
-                [max[0], min[1], min[2], 1],
-                [min[0], min[1], min[2], 1]
-            ];
-        };
-    },
-
-    /**
-     * Represents a ray fired from a screen point to the scene
-     * @param {Array} position 3D vector
-     * @param {Array} direction 3D vector
-     * @return {WaveEngineJS.ray}
-     */
-    ray:function (position, direction) {
-        this.position = position;
-        this.direction = direction;
-        return this;
-    },
-
-    /**
      * Represents a camera for the scene
      * @param {Number} width Scene width
      * @param {Number} height Scene height
@@ -773,32 +660,6 @@ var WaveEngineJS = {
             var num = a - b;
             return (-WaveEngineJS.EPSILON <= num) && (num <= WaveEngineJS.EPSILON);
         };
-
-        /**
-         * Unprojects a point in the scene
-         * @param {Array} source 3D vector
-         * @param {WaveEngine3D.Matrix} view View Matrix
-         * @param {WaveEngine3D.Matrix} projection Projection Matrix
-         * @param {WaveEngine3D.Matrix} world World Matrix
-         * @return {Array}
-         */
-        this.unproject = function (source, view, projection, world) {
-            var minz = 0,
-                maxz = 1,
-                matrix = WaveEngineJS.multiply(WaveEngineJS.multiply(world, view), projection);
-
-            matrix.invert();
-            source[0] = (((source[0]) / (that.width)) * 2) - 1;
-            source[1] = -((((source[1]) / (that.height)) * 2) - 1);
-            source[2] = (source[2] - minz) / (maxz - minz);
-            var vector = WaveEngineJS.transformV3Matrix(source, matrix);
-            var vector4 = [vector[0], vector[1], vector[2], 1];
-            var a = (((source[0] * matrix[3]) + (source[1] * matrix[7])) + (source[2] * matrix[11])) + matrix[15];
-            if (!that.withinEpsilon(a, 1)) {
-                WaveEngineJS.divide(vector4, a);
-            }
-            return vector4;
-        };
     },
 
     /**
@@ -832,8 +693,6 @@ var WaveEngineJS = {
         this.backfaceCulling = true;
         this.world = new WaveEngineJS.MatrixIdentity();
         this.refreshedBoudingBox = false;
-        this.BoundingBox = new WaveEngineJS.BoundingBox();
-        this.debugLines = false;
         this.color = [0, 0, 0, 1];
         this.borderColor = [0, 0, 0, 1];
 
@@ -953,142 +812,6 @@ var WaveEngineJS = {
         };
 
         /**
-         * Refreshes the bounding box if is necessary
-         * @param {Array} vectors 3D vectors array
-         */
-        this.refreshBoundingBox = function (vectors) {
-            if (!that.refreshedBoudingBox) {
-                var vector3 = [Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE];
-                var vector2 = [-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE];
-
-                var l = vectors.length;
-                for (var i = 0; i < l; i++) {
-                    var vector4 = vectors[i];
-                    vector3 = WaveEngineJS.min(vector3, vector4);
-                    vector2 = WaveEngineJS.max(vector2, vector4);
-                }
-
-                that.BoundingBox.min = vector3;
-                that.BoundingBox.max = vector2;
-                that.refreshedBoudingBox = true;
-            }
-        };
-
-        /**
-         * Get the distance between a vector and a model
-         * @param {Array} vector 3D vector with the camera position
-         * @return {Number}
-         */
-        this.getDistanceToCamera = function (vector) {
-            return Math.sqrt(((vector[0] - that.position[0]) * (vector[0] - that.position[0])) + ((vector[1] - that.position[1]) * (vector[1] - that.position[1])) + ((vector[2] - that.position[2]) * (vector[2] - that.position[2])));
-        };
-    },
-
-    /**
-     * Represents a set of models
-     * @param {string} id Group model ID
-     */
-    groupModel:function (id) {
-        var that = this;
-        this.id = id;
-        this.models = new Array();
-        this.world = new WaveEngineJS.MatrixIdentity();
-        this.position = [0, 0, 0];
-        this.rotation = [0, 0, 0];
-        this.scale = [1, 1, 1];
-        this.BoundingBox = new WaveEngineJS.BoundingBox();
-        this.refreshedBoudingBox = false;
-
-        /**
-         * Adds a new model to the set
-         * @param {WaveEngineJS.Model} model
-         */
-        this.addModel = function (model) {
-            that.models[that.models.length] = model;
-        };
-
-        /**
-         * Changes the group model position
-         * @param {Number} x
-         * @param {Number} y
-         * @param {Number} z
-         */
-        this.changePosition = function (x, y, z) {
-            that.position[0] = x;
-            that.position[1] = y;
-            that.position[2] = z;
-            that.refreshWorld();
-        };
-
-        /**
-         * Changes the group model rotation
-         * @param {Number} x
-         * @param {Number} y
-         * @param {Number} z
-         */
-        this.changeRotation = function (x, y, z) {
-            that.rotation[0] = x;
-            that.rotation[1] = y;
-            that.rotation[2] = z;
-            that.refreshWorld();
-        };
-
-        /**
-         * Changes the group model scale
-         * @param {Number} x
-         * @param {Number} y
-         * @param {Number} z
-         */
-        this.changeScale = function (x, y, z) {
-            that.scale[0] = x;
-            that.scale[1] = y;
-            that.scale[2] = z;
-            that.refreshWorld();
-        };
-
-        /**
-         * Updates the World matrix for the group model and all models in it
-         */
-        this.refreshWorld = function () {
-            var rotationMatrix = WaveEngineJS.createFromYawPitchRoll(that.rotation[1], that.rotation[0], that.rotation[2]),
-                scaleMatrix = WaveEngineJS.createScale(that.scale[0], that.scale[1], that.scale[2]),
-                translationMatrix = WaveEngineJS.createTranslation(that.position);
-
-            that.world = WaveEngineJS.multiply(scaleMatrix, translationMatrix);
-            that.world = WaveEngineJS.multiply(rotationMatrix, that.world);
-
-            var models = that.models,
-                l = models.length;
-            for (var i = 0; i < l; i++) {
-                models[i].refreshWorld();
-                var world = models[i].world;
-                models[i].world = WaveEngineJS.multiply(world, that.world);
-            }
-            that.refreshedBoudingBox = false;
-        };
-
-        /**
-         * Refreshes the group model bounding box if necessary
-         * @param {Array} vectors 3D vectors array
-         */
-        this.refreshBoundingBox = function (vectors) {
-            if (!that.refreshedBoudingBox) {
-                var vector3 = [Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE],
-                    vector2 = [-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE],
-                    l = vectors.length;
-                for (var i = 0; i < l; i++) {
-                    var vector4 = vectors[i];
-                    vector3 = WaveEngineJS.min(vector3, vector4);
-                    vector2 = WaveEngineJS.max(vector2, vector4);
-                }
-
-                that.BoundingBox.min = vector3;
-                that.BoundingBox.max = vector2;
-                that.refreshedBoudingBox = true;
-            }
-        };
-
-        /**
          * Get the distance between a vector and a model
          * @param {Array} vector 3D vector with the camera position
          * @return {Number}
@@ -1110,7 +833,6 @@ var WaveEngineJS = {
             comma = WaveEngineJS.comma,
             close = WaveEngineJS.close;
         this.models = new Array();
-        this.groupModels = new Array();
         this.camera = new WaveEngineJS.Camera(canvas.width, canvas.height);
         this.context = null;
         try {
@@ -1119,11 +841,8 @@ var WaveEngineJS = {
             alert("Canvas not valid");
         }
 
-        this.showDebugLines = false;
         this.width = canvas.width;
         this.height = canvas.height;
-        this.POINTS = "POINTS";
-        this.WIRE = "WIRE";
 
         /**
          * Set the scene camera (normal or sphere camera)
@@ -1145,79 +864,20 @@ var WaveEngineJS = {
         };
 
         /**
-         * Adds a group model to the scene
-         * @param {WaveEngineJS.Model} model
-         * @return {Number}
-         */
-        this.addGroupModel = function (groupModel) {
-            var position = that.groupModels.length;
-            that.groupModels[position] = groupModel;
-            return position;
-        };
-
-        /**
-         * Draws the bounding box lines
-         * @param {WaveEngineJS.Model} model
-         */
-        this.renderDebugLines = function (model) {
-            var corners = model.BoundingBox.GetConers();
-            var vcorners = new Array();
-            var l = vcorners.length;
-            for (var j = 0; j < l; j++) {
-                vcorners[j] = WaveEngineJS.convert(corners[j], that.camera.viewproj, that.width, that.height);
-            }
-
-            that.context.beginPath();
-            that.context.strokeStyle = "black";
-            that.context.moveTo(vcorners[0][0], vcorners[0][1]);
-            that.context.lineTo(vcorners[1][0], vcorners[1][1]);
-            that.context.lineTo(vcorners[2][0], vcorners[2][1]);
-            that.context.lineTo(vcorners[3][0], vcorners[3][1]);
-            that.context.lineTo(vcorners[0][0], vcorners[0][1]);
-
-            that.context.lineTo(vcorners[4][0], vcorners[4][1]);
-            that.context.lineTo(vcorners[5][0], vcorners[5][1]);
-            that.context.lineTo(vcorners[6][0], vcorners[6][1]);
-            that.context.lineTo(vcorners[7][0], vcorners[7][1]);
-            that.context.lineTo(vcorners[4][0], vcorners[4][1]);
-
-            that.context.moveTo(vcorners[1][0], vcorners[1][1]);
-            that.context.lineTo(vcorners[5][0], vcorners[5][1]);
-
-            that.context.moveTo(vcorners[2][0], vcorners[2][1]);
-            that.context.lineTo(vcorners[6][0], vcorners[6][1]);
-
-            that.context.moveTo(vcorners[3][0], vcorners[3][1]);
-            that.context.lineTo(vcorners[7][0], vcorners[7][1]);
-            that.context.stroke();
-            that.context.closePath();
-        };
-
-        /**
          * Draws the scene
-         * @param {String} type
          */
-        this.render = function (type) {
+        this.render = function () {
             that.clearScreen();
             var cp = that.camera.getPosition(),
                 models = that.models,
-                groupModels = that.groupModels,
                 preSortModels = [],
-                preSortGroupModels = [],
                 sortModels,
-                sortGroupModes,
                 l = models.length;
             for (var i = 0; i < l; i++) {
                 preSortModels[i] = { d:(models[i].getDistanceToCamera(cp) * 1000), model:models[i] };
             }
 
-            l = groupModels.length;
-            for (var i = 0; i < l; i++) {
-                preSortGroupModels[i] = { d:groupModels[i].getDistanceToCamera(cp), groupModel:groupModels[i] };
-            }
-
             sortModels = WaveEngineJS.sortModels(preSortModels);
-            sortGroupModes = WaveEngineJS.sortModels(preSortGroupModels);
 
             l = sortModels.length;
             for (var i = 0; i < l; i++) {
@@ -1228,66 +888,9 @@ var WaveEngineJS = {
                     vertices[j] = WaveEngineJS.transformV4Matrix(model.vertices[j], model.world);
                 }
 
-                model.refreshBoundingBox(vertices);
-
-                if (that.showDebugLines) {
-                    that.renderDebugLines(model);
-                }
-                switch (type) {
-                    case that.POINTS:
-                        that.drawPoints(vertices);
-                        break;
-                    case that.WIRE:
-                        that.context.beginPath();
-                        that.drawWire(vertices, model);
-                        that.context.closePath();
-                        break;
-                    default:
-                        that.drawPoints(vertices);
-                        break;
-                }
-            }
-
-            l = sortGroupModes.length;
-            for (var i = 0; i < l; i++) {
-                var groupModel = sortGroupModes[i].groupModel,
-                    models = groupModel.models,
-                    modelsVertices = [],
-                    totalVertices = [],
-                    ll = models.length;
-                for (var k = 0; k < ll; k++) {
-                    var model = models[k],
-                        vertices = [];
-                    for (var j = 0; j < model.vertices.length; j++) {
-                        vertices[j] = WaveEngineJS.transformV4Matrix(model.vertices[j], model.world);
-                        totalVertices[totalVertices.length] = vertices[j];
-                    }
-                    modelsVertices[k] = vertices;
-                }
-
-                groupModel.refreshBoundingBox(totalVertices);
-                if (that.showDebugLines) {
-                    that.renderDebugLines(groupModel);
-                    type = that.WIRE;
-                }
-
-                for (var k = 0; k < ll; k++) {
-                    switch (type) {
-                        case that.POINTS:
-                            that.drawPoints(modelsVertices[k]);
-                            break;
-                        case that.WIRE:
-                            that.context.beginPath();
-                            that.context.strokeStyle = "black";
-                            that.context.beginPath();
-                            that.drawWire(modelsVertices[k], models[k]);
-                            that.context.closePath();
-                            break;
-                        default:
-                            that.drawPoints(vertices);
-                            break;
-                    }
-                }
+                that.context.beginPath();
+                that.drawWire(vertices, model);
+                that.context.closePath();
             }
         };
 
@@ -1296,22 +899,6 @@ var WaveEngineJS = {
          */
         this.clearScreen = function () {
             that.context.clearRect(0, 0, that.width, that.height);
-        };
-
-        /**
-         * Draws only the models vertix
-         * @param {Array} vertices Model vertix
-         */
-        this.drawPoints = function (vertices) {
-            that.context.beginPath();
-            that.context.strokeStyle = "black";
-            for (var i = 0; i < vertices.length; i++) {
-                var vertex1 = WaveEngineJS.convert(vertices[i], that.camera.viewproj, that.width, that.height);
-                that.context.moveTo(vertex1[0], vertex1[1]);
-                that.context.lineTo(vertex1[0] + 1, vertex1[1] + 1);
-            }
-            that.context.stroke();
-            that.context.closePath();
         };
 
         /**
@@ -1373,82 +960,10 @@ var WaveEngineJS = {
             }
             that.context.stroke();
         };
-
-        /**
-         * Get the nearest model in a scene from a 2D position
-         * @param position
-         * @return {*}
-         */
-        this.getModelInMap = function (position) {
-            var nearSource = [position[0], position[1], 0],
-                farSource = [position[0], position[1], 1],
-                camera = that.camera,
-                identity = new WaveEngineJS.MatrixIdentity(),
-                nearPoint = camera.unproject(nearSource, camera.view, camera.projection, identity),
-                farPoint = camera.unproject(farSource, camera.view, camera.projection, identity),
-                direction = WaveEngineJS.substractV4(farPoint, nearPoint);
-
-            WaveEngineJS.normalize(direction);
-
-            var r = new WaveEngineJS.ray(nearPoint, direction),
-                minDist = Number.MAX_VALUE,
-                dist,
-                found = null,
-                l = that.model.length;
-            for (var i = 0; i < l; i++) {
-                var model = that.models[i];
-                dist = model.BoundingBox.Intersects(r);
-
-                if (dist != null) {
-                    if (dist < minDist) {
-                        minDist = dist;
-                        found = model;
-                    }
-                }
-            }
-
-            return found;
-        };
-
-        /**
-         * Get the nearest group model in a scene from a 2D position
-         * @param position
-         * @return {*}
-         */
-        this.getGroupModelInMap = function (position) {
-            var nearSource = [position[0], position[1], 0],
-                farSource = [position[0], position[1], 1],
-                camera = that.camera,
-                identity = new WaveEngineJS.MatrixIdentity(),
-                nearPoint = camera.unproject(nearSource, camera.view, camera.projection, identity),
-                farPoint = camera.unproject(farSource, camera.view, camera.projection, identity),
-                direction = WaveEngineJS.substractV4(farPoint, nearPoint);
-
-            WaveEngineJS.normalize(direction);
-
-            var r = new WaveEngineJS.ray(nearPoint, direction),
-                minDist = Number.MAX_VALUE,
-                dist,
-                found = null,
-                l = that.groupModels.length;
-            for (var i = 0; i < l; i++) {
-                var model = that.groupModels[i];
-                dist = model.BoundingBox.Intersects(r);
-
-                if (dist != null) {
-                    if (dist < minDist) {
-                        minDist = dist;
-                        found = model;
-                    }
-                }
-            }
-
-            return found;
-        };
     },
 
     /**
-     * Sorts the models or group models in a z axis
+     * Sorts the models in a z axis
      * @param preSortModels
      * @return {*}
      */

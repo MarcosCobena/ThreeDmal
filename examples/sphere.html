@@ -32,18 +32,9 @@
                 window.requestAnimationFrame(animate);
             }
 
-            var drawType = scene.WIRE;
-
             function Draw() {
                 var date = new Date();
-                switch (drawType) {
-                    case scene.WIRE:
-                        scene.render(scene.WIRE);
-                        break;
-                    case scene.POINTS:
-                        scene.render(scene.POINTS);
-                        break;
-                }
+                scene.render();
                 total.textContent = new Date() - date;
             }
         }
