@@ -32,7 +32,7 @@
             
             function animate() {
                 scene.models[0].changeRotation(0, yRotation, 0);
-                scene.render();
+                scene.draw();
                 yRotation -= 0.01;
                 window.requestAnimationFrame(animate);
             }

@@ -11,14 +11,6 @@
 var ThreeDmal = {
 
     /**
-     * Constants to generate color strings
-     * @type {String}
-     */
-    rgba:'rgba(',
-    comma:',',
-    close:')',
-
-    /**
      * Constan Epsilon
      * @type {Number}
      */
@@ -683,15 +675,6 @@ var ThreeDmal = {
         this.backfaceCulling = true;
         this.world = new ThreeDmal.MatrixIdentity();
         this.refreshedBoudingBox = false;
-        this.color = [0, 0, 0, 1];
-
-        /**
-         * Changes the model's color
-         * @param {Array} color 3D vector
-         */
-        this.changeColor = function (color) {
-            that.color = color;
-        };
 
         /**
          * Adds a new vertex to the model
@@ -800,10 +783,7 @@ var ThreeDmal = {
      * @constructor
      */
     Scene:function (canvas) {
-        var that = this,
-            rgba = ThreeDmal.rgba,
-            comma = ThreeDmal.comma,
-            close = ThreeDmal.close;
+        var that = this;
         this.models = new Array();
         this.camera = null;
         this.context = null;
@@ -815,14 +795,6 @@ var ThreeDmal = {
 
         this.width = canvas.width;
         this.height = canvas.height;
-
-        /**
-         * Sets the scene camera
-         * @param {ThreeDmal.Camera} camera
-         */
-        this.setCamera = function (camera) {
-            that.camera = camera;
-        };
 
         /**
          * Adds a model to the scene
@@ -838,38 +810,36 @@ var ThreeDmal = {
         /**
          * Draws the scene
          */
-        this.render = function () {
-            that.clearScreen();
-            var cp = that.camera.getPosition(),
-                models = that.models,
-                preSortModels = [],
-                sortModels,
-                l = models.length;
-            for (var i = 0; i < l; i++) {
-                preSortModels[i] = { d:(models[i].getDistanceToCamera(cp) * 1000), model:models[i] };
-            }
+        this.draw = function () {
+            that._clearScreen();
+            var models = that.models;
 
-            sortModels = ThreeDmal.sortModels(preSortModels);
+            for (var i = 0; i < models.length; i++) {
+                var model = models[i],
+                    vertices = [];
 
-            l = sortModels.length;
-            for (var i = 0; i < l; i++) {
-                var model = sortModels[i].model,
-                    vertices = [],
-                    ll = model.vertices.length;
-                for (var j = 0; j < ll; j++) {
+                for (var j = 0; j < model.vertices.length; j++) {
                     vertices[j] = ThreeDmal.transformV4Matrix(model.vertices[j], model.world);
                 }
 
                 that.context.beginPath();
-                that.drawWire(vertices, model);
+                that._drawEdges(vertices, model);
                 that.context.closePath();
             }
         };
 
         /**
+         * Sets the scene's camera
+         * @param {ThreeDmal.Camera} camera
+         */
+        this.setCamera = function (camera) {
+            that.camera = camera;
+        };
+
+        /**
          * Clears the canvas
          */
-        this.clearScreen = function () {
+        this._clearScreen = function () {
             that.context.clearRect(0, 0, that.width, that.height);
         };
 
@@ -878,11 +848,11 @@ var ThreeDmal = {
          * @param {Array} vertices Model's vertices
          * @param {ThreeDmal.Model} model
          */
-        this.drawWire = function (vertices, model) {
+        this._drawEdges = function (vertices, model) {
             var indexes = model.index,
-                pc = that.camera.getPosition(),
-                color = model.color;
-            that.context.strokeStyle = rgba + color[0] + comma + color[1] + comma + color[2] + comma + color[3] + close;
+                pc = that.camera.getPosition();
+            that.context.strokeStyle = "rgba(0, 0, 0, 1)";
+
             for (var i = 0; i < indexes.length / 3; i++) {
                 var index = i * 3,
                     p1 = vertices[indexes[index]],
@@ -905,9 +875,9 @@ var ThreeDmal = {
                 }
             }
 
-            var polygons = model.poligons,
-                l = polygons.length;
-            for (var i = 0; i < l; i++) {
+            var polygons = model.poligons;
+
+            for (var i = 0; i < polygons.length; i++) {
                 var polygon = polygons[i],
                     index = 0,
                     p1 = vertices[polygon[index]],
@@ -923,37 +893,17 @@ var ThreeDmal = {
                     var orig = ThreeDmal.convert(vertices[polygon[0]], that.camera.viewproj, that.width, that.height);
                     that.context.moveTo(orig[0], orig[1]);
                     var ll = polygon.length;
+
                     for (var j = 1; j < ll; j++) {
                         var aux = ThreeDmal.convert(vertices[polygon[j]], that.camera.viewproj, that.width, that.height);
                         that.context.lineTo(aux[0], aux[1]);
                     }
+
                     that.context.lineTo(orig[0], orig[1]);
                 }
             }
+
             that.context.stroke();
         };
-    },
-
-    /**
-     * Sorts the models in a z axis
-     * @param preSortModels
-     * @return {*}
-     */
-    sortModels:function (preSortModels) {
-        if (preSortModels.length <= 1) {
-            return preSortModels;
-        }
-        var pivot = Math.floor(preSortModels / 2),
-            less = [],
-            greater = [],
-            pivotElem = preSortModels.splice(pivot, 1);
-        for (var x = 0; x < preSortModels.length; x++) {
-            if (preSortModels[x].d <= pivotElem[0].d) {
-                less.push(preSortModels[x]);
-            } else {
-                greater.push(preSortModels[x]);
-            }
-        }
-        return [].concat(ThreeDmal.sortModels(greater), pivotElem, ThreeDmal.sortModels(less));
     }
 };
