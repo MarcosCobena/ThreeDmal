@@ -2,7 +2,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title></title>
-    <script type="text/javascript" src="../js/lib/requestanimationframe.js"></script>
     <script type="text/javascript" src="../js/lib/wave.js"></script>
     <script type="text/javascript">
         function onLoad() {
@@ -27,29 +26,19 @@
             cube.addPolygon([1, 5, 7, 2]);
             cube.addPolygon([4, 0, 3, 6]);
             scene.addModel(cube);
-            
+            var yRotation = 0;
             window.requestAnimationFrame(animate);
-            var rotY = 0;
-            var total = document.getElementById("total");
+            
             function animate() {
-                var date = new Date();
-                scene.models[0].changeRotation(0, rotY, 0);
-                draw();
-                rotY -= 0.01;
-                total.textContent = new Date() - date;
-                window.requestAnimationFrame(animate);
-            }
-
-            function draw() {
-                var date = new Date();
+                scene.models[0].changeRotation(0, yRotation, 0);
                 scene.render();
-                total.textContent = new Date() - date;
+                yRotation -= 0.01;
+                window.requestAnimationFrame(animate);
             }
         }
     </script>
 </head>
 <body onload="onLoad();">
     <canvas width="640" height="480" id="canvas">Canvas not supported.</canvas>
-    <p id="total"></p>
 </body>
 </html>
