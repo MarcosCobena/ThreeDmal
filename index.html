@@ -2,15 +2,15 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title></title>
-    <script type="text/javascript" src="../js/lib/wave.js"></script>
+    <script type="text/javascript" src="../js/lib/threedmal.js"></script>
     <script type="text/javascript">
         function onLoad() {
             var canvas = document.getElementById("canvas");
-            var scene = new WaveEngineJS.Scene(canvas);
-            var camera = new WaveEngineJS.Camera(canvas.width, canvas.height);
+            var scene = new ThreeDmal.Scene(canvas);
+            var camera = new ThreeDmal.Camera(canvas.width, canvas.height);
             camera.changeCameraPosition([0, 5, 5]);
             scene.addCamera(camera);
-            var cube = new WaveEngineJS.Model();
+            var cube = new ThreeDmal.Model();
             cube.addVertex(1, -1, 1);
             cube.addVertex(1, 1, 1);
             cube.addVertex(-1, 1, 1);

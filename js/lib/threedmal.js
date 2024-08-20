@@ -1,13 +1,14 @@
 /*
- * WaveJS
+ * ThreeDmal
  *
+ * Based on WaveJS
  * Copyright (c) 2012 Plain Concepts (http://www.plainconcepts.com)
  * Dual licensed under the MIT (MIT-LICENSE.txt)
  * and GPL (GPL-LICENSE.txt) licenses.
  *
  */
 "use strict";
-var WaveEngineJS = {
+var ThreeDmal = {
 
     /**
      * Constants to generate color strings
@@ -25,8 +26,8 @@ var WaveEngineJS = {
 
     /**
      * Create an instance of a 4x4 Matrix
-     * @return {WaveEngineJS.Matrix}
-     * @this {WaveEngineJS.Matrix}
+     * @return {ThreeDmal.Matrix}
+     * @this {ThreeDmal.Matrix}
      * @constructor
      */
     Matrix:function () {
@@ -50,7 +51,7 @@ var WaveEngineJS = {
 
         /**
          * Inverts the Matrix
-         * @this {WaveEngineJS.Matrix}
+         * @this {ThreeDmal.Matrix}
          */
         this.invert = function () {
             var num5 = that[0];
@@ -116,10 +117,10 @@ var WaveEngineJS = {
     /**
      * Creates a 4x4 Identity Matrix
      * @constructor
-     * @return {WaveEngineJS.Matrix}
+     * @return {ThreeDmal.Matrix}
      */
     MatrixIdentity:function () {
-        var matrix = new WaveEngineJS.Matrix();
+        var matrix = new ThreeDmal.Matrix();
         matrix[0] = 1;
         matrix[1] = 0;
         matrix[2] = 0;
@@ -143,10 +144,10 @@ var WaveEngineJS = {
      * Creates a 4x4 Translation Matrix
      * @param {Array} vector3 The new position
      * @constructor
-     * @return {WaveEngineJS.Matrix}
+     * @return {ThreeDmal.Matrix}
      */
     createTranslation:function (vector3) {
-        var matrix = new WaveEngineJS.Matrix();
+        var matrix = new ThreeDmal.Matrix();
         matrix[0] = 1;
         matrix[1] = 0;
         matrix[2] = 0;
@@ -172,10 +173,10 @@ var WaveEngineJS = {
      * @param {number} yScale The scale in y-axis
      * @param {number} zScale The scale in z-axis
      * @constructor
-     * @return {WaveEngineJS.Matrix}
+     * @return {ThreeDmal.Matrix}
      */
     createScale:function (xScale, yScale, zScale) {
-        var matrix = new WaveEngineJS.Matrix();
+        var matrix = new ThreeDmal.Matrix();
         matrix[0] = xScale;
         matrix[1] = 0;
         matrix[2] = 0;
@@ -202,10 +203,10 @@ var WaveEngineJS = {
      * @param {Number} nearPlaneDistance
      * @param {Number} farPlaneDistance
      * @constructor
-     * @return {WaveEngineJS.Matrix}
+     * @return {ThreeDmal.Matrix}
      */
     createPerspectiveFieldOfView:function (fieldOfView, aspectRatio, nearPlaneDistance, farPlaneDistance) {
-        var matrix = new WaveEngineJS.Matrix();
+        var matrix = new ThreeDmal.Matrix();
         var num = 1 / Math.tan(fieldOfView * 0.5);
         var num9 = num / aspectRatio;
         matrix[0] = num9;
@@ -225,15 +226,15 @@ var WaveEngineJS = {
      * @param {Array} cameraPosition Array with the camera position
      * @param {Array} cameraTarget Array with the target position
      * @param {Array} cameraUpVector Array with the camera's vector up
-     * @return {WaveEngineJS.Matrix}
+     * @return {ThreeDmal.Matrix}
      */
     createLookAt:function (cameraPosition, cameraTarget, cameraUpVector) {
-        var matrix = new WaveEngineJS.Matrix();
-        var vector = WaveEngineJS.substractV3(cameraPosition, cameraTarget);
-        WaveEngineJS.normalize(vector);
-        var vector2 = WaveEngineJS.crossV3(cameraUpVector, vector);
-        WaveEngineJS.normalize(vector2);
-        var vector3 = WaveEngineJS.crossV3(vector, vector2);
+        var matrix = new ThreeDmal.Matrix();
+        var vector = ThreeDmal.substractV3(cameraPosition, cameraTarget);
+        ThreeDmal.normalize(vector);
+        var vector2 = ThreeDmal.crossV3(cameraUpVector, vector);
+        ThreeDmal.normalize(vector2);
+        var vector3 = ThreeDmal.crossV3(vector, vector2);
 
         matrix[0] = vector2[0];
         matrix[1] = vector3[0];
@@ -247,21 +248,21 @@ var WaveEngineJS = {
         matrix[9] = vector3[2];
         matrix[10] = vector[2];
         matrix[11] = 0;
-        matrix[12] = -WaveEngineJS.dotV3(vector2, cameraPosition);
-        matrix[13] = -WaveEngineJS.dotV3(vector3, cameraPosition);
-        matrix[14] = -WaveEngineJS.dotV3(vector, cameraPosition);
+        matrix[12] = -ThreeDmal.dotV3(vector2, cameraPosition);
+        matrix[13] = -ThreeDmal.dotV3(vector3, cameraPosition);
+        matrix[14] = -ThreeDmal.dotV3(vector, cameraPosition);
         matrix[15] = 1;
         return matrix;
     },
 
     /**
      * Multiplies two 4x4 Matrix
-     * @param {WaveEngineJS.Matrix} matrix1 4x4 Matrix
-     * @param {WaveEngineJS.Matrix} matrix2 4x4 Matrix
-     * @return {WaveEngineJS.Matrix}
+     * @param {ThreeDmal.Matrix} matrix1 4x4 Matrix
+     * @param {ThreeDmal.Matrix} matrix2 4x4 Matrix
+     * @return {ThreeDmal.Matrix}
      */
     multiply:function (matrix1, matrix2) {
-        var matrix = new WaveEngineJS.Matrix();
+        var matrix = new ThreeDmal.Matrix();
         matrix[0] = (((matrix1[0] * matrix2[0]) + (matrix1[1] * matrix2[4])) + (matrix1[2] * matrix2[8])) + (matrix1[3] * matrix2[12]);
         matrix[1] = (((matrix1[0] * matrix2[1]) + (matrix1[1] * matrix2[5])) + (matrix1[2] * matrix2[9])) + (matrix1[3] * matrix2[13]);
         matrix[2] = (((matrix1[0] * matrix2[2]) + (matrix1[1] * matrix2[6])) + (matrix1[2] * matrix2[10])) + (matrix1[3] * matrix2[14]);
@@ -284,7 +285,7 @@ var WaveEngineJS = {
     /**
      * Converts a 3D point in a projected 2D point
      * @param {Array} pos 3D point to Convert.
-     * @param {WaveEngineJS.Matrix} worldviewproj World view projection matrix
+     * @param {ThreeDmal.Matrix} worldviewproj World view projection matrix
      * @param {number} screenWidth Screen width
      * @param {number} screenHeight Screen Height
      * @return {Array}
@@ -310,13 +311,13 @@ var WaveEngineJS = {
      */
     normalize:function (vector) {
         if (vector.length === 2) {
-            WaveEngineJS.normalizeVector2(vector);
+            ThreeDmal.normalizeVector2(vector);
         }
         else if (vector.length === 3) {
-            WaveEngineJS.normalizeVector3(vector);
+            ThreeDmal.normalizeVector3(vector);
         }
         else if (vector.length === 4) {
-            WaveEngineJS.normalizeVector4(vector);
+            ThreeDmal.normalizeVector4(vector);
         }
     },
 
@@ -430,7 +431,7 @@ var WaveEngineJS = {
     /**
      * Transforms a 3D point using a Transformation Matrix
      * @param {Array} position Point Position
-     * @param {WaveEngineJS.Matrix} matrix Transformation Matrix
+     * @param {ThreeDmal.Matrix} matrix Transformation Matrix
      * @return {Array}
      */
     transformV3Matrix:function (position, matrix) {
@@ -446,7 +447,7 @@ var WaveEngineJS = {
     /**
      * Transforms a 4D point using a Transformation Matrix
      * @param {Array} vector 4D vector
-     * @param {WaveEngineJS.Matrix} matrix Transformation Matrix
+     * @param {ThreeDmal.Matrix} matrix Transformation Matrix
      * @return {Array}
      */
     transformV4Matrix:function (vector, matrix) {
@@ -505,7 +506,7 @@ var WaveEngineJS = {
      * @param {number} yaw
      * @param {number} pitch
      * @param {number} roll
-     * @return {WaveEngineJS.Matrix}
+     * @return {ThreeDmal.Matrix}
      */
     createFromYawPitchRoll:function (yaw, pitch, roll) {
         var quaternion = [],
@@ -533,7 +534,7 @@ var WaveEngineJS = {
         num2 = quaternion[1] * quaternion[2];
         num = quaternion[0] * quaternion[3];
 
-        var matrix = new WaveEngineJS.Matrix();
+        var matrix = new ThreeDmal.Matrix();
         matrix[0] = 1 - (2 * (num8 + num7));
         matrix[1] = 2 * (num6 + num5);
         matrix[2] = 2 * (num4 - num3);
@@ -567,9 +568,9 @@ var WaveEngineJS = {
         this.width = width;
         this.height = height;
         this.aspectRatio = this.width / this.height;
-        this.view = WaveEngineJS.createLookAt(this.cameraPosition, this.cameraTarget, this.cameraUpVector);
-        this.projection = WaveEngineJS.createPerspectiveFieldOfView(Math.PI / 4, this.aspectRatio, 1, 1000);
-        this.viewproj = WaveEngineJS.multiply(this.view, this.projection);
+        this.view = ThreeDmal.createLookAt(this.cameraPosition, this.cameraTarget, this.cameraUpVector);
+        this.projection = ThreeDmal.createPerspectiveFieldOfView(Math.PI / 4, this.aspectRatio, 1, 1000);
+        this.viewproj = ThreeDmal.multiply(this.view, this.projection);
 
         /**
          * Get the camera position
@@ -585,8 +586,8 @@ var WaveEngineJS = {
          */
         this.changeAspectRatio = function (aspectRatio) {
             that.aspectRatio = aspectRatio;
-            that.projection = WaveEngineJS.createPerspectiveFieldOfView(Math.PI / 4, that.aspectRatio, 1, 1000);
-            that.viewproj = WaveEngineJS.multiply(that.view, that.projection);
+            that.projection = ThreeDmal.createPerspectiveFieldOfView(Math.PI / 4, that.aspectRatio, 1, 1000);
+            that.viewproj = ThreeDmal.multiply(that.view, that.projection);
         };
 
         /**
@@ -597,8 +598,8 @@ var WaveEngineJS = {
          * @param {Number} farPlaneDistance the new Far Plane Distance
          */
         this.changePerspectiveFieldOfView = function (fieldOfView, aspectRatio, nearPlaneDistance, farPlaneDistance) {
-            that.projection = WaveEngineJS.createPerspectiveFieldOfView(fieldOfView, aspectRatio, nearPlaneDistance, farPlaneDistance);
-            that.viewproj = WaveEngineJS.multiply(that.view, that.projection);
+            that.projection = ThreeDmal.createPerspectiveFieldOfView(fieldOfView, aspectRatio, nearPlaneDistance, farPlaneDistance);
+            that.viewproj = ThreeDmal.multiply(that.view, that.projection);
         };
 
         /**
@@ -645,8 +646,8 @@ var WaveEngineJS = {
          * Changes the new View Projection Matrix
          */
         this.changeViewProj = function () {
-            that.view = WaveEngineJS.createLookAt(that.cameraPosition, that.cameraTarget, that.cameraUpVector);
-            that.viewproj = WaveEngineJS.multiply(that.view, that.projection);
+            that.view = ThreeDmal.createLookAt(that.cameraPosition, that.cameraTarget, that.cameraUpVector);
+            that.viewproj = ThreeDmal.multiply(that.view, that.projection);
         };
 
         /**
@@ -657,7 +658,7 @@ var WaveEngineJS = {
          */
         this.withinEpsilon = function (a, b) {
             var num = a - b;
-            return (-WaveEngineJS.EPSILON <= num) && (num <= WaveEngineJS.EPSILON);
+            return (-ThreeDmal.EPSILON <= num) && (num <= ThreeDmal.EPSILON);
         };
     },
 
@@ -690,7 +691,7 @@ var WaveEngineJS = {
         this.rotation = [0, 0, 0];
         this.scale = [1, 1, 1];
         this.backfaceCulling = true;
-        this.world = new WaveEngineJS.MatrixIdentity();
+        this.world = new ThreeDmal.MatrixIdentity();
         this.refreshedBoudingBox = false;
         this.color = [0, 0, 0, 1];
 
@@ -711,7 +712,7 @@ var WaveEngineJS = {
          */
         this.addVertex = function (x, y, z) {
             var position = that.vertices.length;
-            that.vertices[position] = new WaveEngineJS.Point3D(x, y, z);
+            that.vertices[position] = new ThreeDmal.Point3D(x, y, z);
             return position;
         };
 
@@ -746,11 +747,11 @@ var WaveEngineJS = {
          * Updates the world matrix
          */
         this.refreshWorld = function () {
-            var rotationMatrix = WaveEngineJS.createFromYawPitchRoll(that.rotation[1], that.rotation[0], that.rotation[2]),
-                scaleMatrix = WaveEngineJS.createScale(that.scale[0], that.scale[1], that.scale[2]),
-                translationMatrix = WaveEngineJS.createTranslation(that.position);
-            that.world = WaveEngineJS.multiply(scaleMatrix, translationMatrix);
-            that.world = WaveEngineJS.multiply(rotationMatrix, that.world);
+            var rotationMatrix = ThreeDmal.createFromYawPitchRoll(that.rotation[1], that.rotation[0], that.rotation[2]),
+                scaleMatrix = ThreeDmal.createScale(that.scale[0], that.scale[1], that.scale[2]),
+                translationMatrix = ThreeDmal.createTranslation(that.position);
+            that.world = ThreeDmal.multiply(scaleMatrix, translationMatrix);
+            that.world = ThreeDmal.multiply(rotationMatrix, that.world);
             that.refreshedBoudingBox = false;
         };
 
@@ -810,11 +811,11 @@ var WaveEngineJS = {
      */
     Scene:function (canvas) {
         var that = this,
-            rgba = WaveEngineJS.rgba,
-            comma = WaveEngineJS.comma,
-            close = WaveEngineJS.close;
+            rgba = ThreeDmal.rgba,
+            comma = ThreeDmal.comma,
+            close = ThreeDmal.close;
         this.models = new Array();
-        this.camera = new WaveEngineJS.Camera(canvas.width, canvas.height);
+        this.camera = new ThreeDmal.Camera(canvas.width, canvas.height);
         this.context = null;
         try {
             this.context = canvas.getContext("2d");
@@ -827,7 +828,7 @@ var WaveEngineJS = {
 
         /**
          * Set the scene camera (normal or sphere camera)
-         * @param {WaveEngineJS.Camera} camera
+         * @param {ThreeDmal.Camera} camera
          */
         this.addCamera = function (camera) {
             that.camera = camera;
@@ -835,7 +836,7 @@ var WaveEngineJS = {
 
         /**
          * Adds a model to the scene
-         * @param {WaveEngineJS.Model} model
+         * @param {ThreeDmal.Model} model
          * @return {Number}
          */
         this.addModel = function (model) {
@@ -858,7 +859,7 @@ var WaveEngineJS = {
                 preSortModels[i] = { d:(models[i].getDistanceToCamera(cp) * 1000), model:models[i] };
             }
 
-            sortModels = WaveEngineJS.sortModels(preSortModels);
+            sortModels = ThreeDmal.sortModels(preSortModels);
 
             l = sortModels.length;
             for (var i = 0; i < l; i++) {
@@ -866,7 +867,7 @@ var WaveEngineJS = {
                     vertices = [],
                     ll = model.vertices.length;
                 for (var j = 0; j < ll; j++) {
-                    vertices[j] = WaveEngineJS.transformV4Matrix(model.vertices[j], model.world);
+                    vertices[j] = ThreeDmal.transformV4Matrix(model.vertices[j], model.world);
                 }
 
                 that.context.beginPath();
@@ -885,7 +886,7 @@ var WaveEngineJS = {
         /**
          * Draws only the model's edges
          * @param {Array} vertices Model's vertices
-         * @param {WaveEngineJS.Model} model
+         * @param {ThreeDmal.Model} model
          */
         this.drawWire = function (vertices, model) {
             var indexes = model.index,
@@ -897,16 +898,16 @@ var WaveEngineJS = {
                     p1 = vertices[indexes[index]],
                     p2 = vertices[indexes[index + 1]],
                     p3 = vertices[indexes[index + 2]],
-                    v1 = WaveEngineJS.substractV3(p1, p2),
-                    v2 = WaveEngineJS.substractV3(p3, p2),
-                    n = WaveEngineJS.crossV3(v1, v2),
-                    c = WaveEngineJS.substractV3(pc, p1),
-                    tita = WaveEngineJS.dotV3(c, n);
+                    v1 = ThreeDmal.substractV3(p1, p2),
+                    v2 = ThreeDmal.substractV3(p3, p2),
+                    n = ThreeDmal.crossV3(v1, v2),
+                    c = ThreeDmal.substractV3(pc, p1),
+                    tita = ThreeDmal.dotV3(c, n);
 
                 if (!model.backfaceCulling || tita < 0) {
-                    var vertex1 = WaveEngineJS.convert(p1, that.camera.viewproj, that.width, that.height);
-                    var vertex2 = WaveEngineJS.convert(p2, that.camera.viewproj, that.width, that.height);
-                    var vertex3 = WaveEngineJS.convert(p3, that.camera.viewproj, that.width, that.height);
+                    var vertex1 = ThreeDmal.convert(p1, that.camera.viewproj, that.width, that.height);
+                    var vertex2 = ThreeDmal.convert(p2, that.camera.viewproj, that.width, that.height);
+                    var vertex3 = ThreeDmal.convert(p3, that.camera.viewproj, that.width, that.height);
                     that.context.moveTo(vertex1[0], vertex1[1]);
                     that.context.lineTo(vertex2[0], vertex2[1]);
                     that.context.lineTo(vertex3[0], vertex3[1]);
@@ -922,18 +923,18 @@ var WaveEngineJS = {
                     p1 = vertices[polygon[index]],
                     p2 = vertices[polygon[index + 1]],
                     p3 = vertices[polygon[index + 2]],
-                    v1 = WaveEngineJS.substractV3(p1, p2),
-                    v2 = WaveEngineJS.substractV3(p3, p2),
-                    n = WaveEngineJS.crossV3(v1, v2),
-                    c = WaveEngineJS.substractV3(pc, p1),
-                    tita = WaveEngineJS.dotV3(c, n);
+                    v1 = ThreeDmal.substractV3(p1, p2),
+                    v2 = ThreeDmal.substractV3(p3, p2),
+                    n = ThreeDmal.crossV3(v1, v2),
+                    c = ThreeDmal.substractV3(pc, p1),
+                    tita = ThreeDmal.dotV3(c, n);
 
                 if (!model.backfaceCulling || tita < 0) {
-                    var orig = WaveEngineJS.convert(vertices[polygon[0]], that.camera.viewproj, that.width, that.height);
+                    var orig = ThreeDmal.convert(vertices[polygon[0]], that.camera.viewproj, that.width, that.height);
                     that.context.moveTo(orig[0], orig[1]);
                     var ll = polygon.length;
                     for (var j = 1; j < ll; j++) {
-                        var aux = WaveEngineJS.convert(vertices[polygon[j]], that.camera.viewproj, that.width, that.height);
+                        var aux = ThreeDmal.convert(vertices[polygon[j]], that.camera.viewproj, that.width, that.height);
                         that.context.lineTo(aux[0], aux[1]);
                     }
                     that.context.lineTo(orig[0], orig[1]);
@@ -963,6 +964,6 @@ var WaveEngineJS = {
                 greater.push(preSortModels[x]);
             }
         }
-        return [].concat(WaveEngineJS.sortModels(greater), pivotElem, WaveEngineJS.sortModels(less));
+        return [].concat(ThreeDmal.sortModels(greater), pivotElem, ThreeDmal.sortModels(less));
     }
 };
