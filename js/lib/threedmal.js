@@ -581,16 +581,6 @@ var ThreeDmal = {
         };
 
         /**
-         * Changes aspectRatio
-         * @param aspectRatio
-         */
-        this.changeAspectRatio = function (aspectRatio) {
-            that.aspectRatio = aspectRatio;
-            that.projection = ThreeDmal.createPerspectiveFieldOfView(Math.PI / 4, that.aspectRatio, 1, 1000);
-            that.viewproj = ThreeDmal.multiply(that.view, that.projection);
-        };
-
-        /**
          * Changes the Perspective Field Of View
          * @param {Number} fieldOfView the new fov
          * @param {Number} aspectRatio the new aspectratio
@@ -815,7 +805,7 @@ var ThreeDmal = {
             comma = ThreeDmal.comma,
             close = ThreeDmal.close;
         this.models = new Array();
-        this.camera = new ThreeDmal.Camera(canvas.width, canvas.height);
+        this.camera = null;
         this.context = null;
         try {
             this.context = canvas.getContext("2d");
@@ -827,10 +817,10 @@ var ThreeDmal = {
         this.height = canvas.height;
 
         /**
-         * Set the scene camera (normal or sphere camera)
+         * Sets the scene camera
          * @param {ThreeDmal.Camera} camera
          */
-        this.addCamera = function (camera) {
+        this.setCamera = function (camera) {
             that.camera = camera;
         };
 
