@@ -11,135 +11,71 @@
 var ThreeDmal = {
 
     /**
-     * Represents a camera for the scene
-     * @param {Number} width Scene width
-     * @param {Number} height Scene height
+     * Represents a 3D camera
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
      * @constructor
      */
-    Camera:function (width, height) {
+    Camera:function (viewportWidth, viewportHeight) {
         var that = this;
-        this.cameraPosition = [0, 0, 15];
-        this.cameraTarget = [0, 0, 0];
-        this.cameraUpVector = [0, 1, 0];
-        this.width = width;
-        this.height = height;
-        this.aspectRatio = this.width / this.height;
-        this.view = ThreeDmalMath.createLookAtMatrix(this.cameraPosition, this.cameraTarget, this.cameraUpVector);
-        this.projection = ThreeDmalMath.createPerspectiveFieldOfViewMatrix(Math.PI / 4, this.aspectRatio, 1, 1000);
-        this.viewproj = ThreeDmalMath.multiply(this.view, this.projection);
+        this.position = [0, 0, 15];
+        this.target = [0, 0, 0];
+        this.upVector = [0, 1, 0];
+        const aspectRatio = viewportWidth / viewportHeight;
+        this.projectionMatrix = ThreeDmalMath.createPerspectiveFieldOfViewMatrix(Math.PI / 4, aspectRatio, 1, 1000);
 
         /**
-         * Get the camera position
-         * @return {Array}
-         */
-        this.getPosition = function () {
-            return that.cameraPosition;
-        };
-
-        /**
-         * Changes the camera position
          * @param {Array} position 3D vector
          */
-        this.changeCameraPosition = function (position) {
-            that.cameraPosition = position;
-            that.changeViewProj();
+        this.setPosition = function (position) {
+            that.position = position;
+            that._refreshViewProjectionMatrices();
         };
 
-        /**
-         * Changes the camera target
-         * @param {Array} target 3D vector
-         */
-        this.changeCameraTarget = function (target) {
-            that.cameraTarget = target;
-            that.changeViewProj();
+        this._refreshViewProjectionMatrices = function () {
+            that.viewMatrix = ThreeDmalMath.createLookAtMatrix(that.position, that.target, that.upVector);
+            that.viewProjectionMatrix = ThreeDmalMath.multiplyMatrixMatrix(that.viewMatrix, that.projectionMatrix);
         };
 
-        /**
-         * Changes the camera Up Vector
-         * @param {Array} upVector 3D vector
-         */
-        this.changeCameraUpVector = function (upVector) {
-            that.cameraUpVector = upVector;
-            that.changeViewProj();
-        };
-
-        /**
-         * Changes the camera LookAt
-         * @param {Array} cameraPosition 3D Vector
-         * @param {Array} cameraTarget 3D Vector
-         * @param {Array} cameraUpVector 3D Vector
-         */
-        this.changeLookAt = function (cameraPosition, cameraTarget, cameraUpVector) {
-            that.cameraPosition = cameraPosition;
-            that.cameraTarget = cameraTarget;
-            that.cameraUpVector = cameraUpVector;
-            that.changeViewProj();
-        };
-
-        /**
-         * Changes the new View Projection Matrix
-         */
-        this.changeViewProj = function () {
-            that.view = ThreeDmalMath.createLookAtMatrix(that.cameraPosition, that.cameraTarget, that.cameraUpVector);
-            that.viewproj = ThreeDmalMath.multiply(that.view, that.projection);
-        };
+        this._refreshViewProjectionMatrices();
     },
 
     /**
-     * Represents a model in a 3D scene
-     * @param {String} id Model ID (optional)
+     * Represents a 3D model
      * @constructor
      */
-    Model:function (id) {
+    Model:function () {
         var that = this;
-        this.id = id;
         this.vertices = new Array();
-        this.index = new Array();
+        this.indices = new Array();
         this.position = [0, 0, 0];
         this.rotation = [0, 0, 0];
         this.scale = [1, 1, 1];
-        this.backfaceCulling = true;
-        this.world = new ThreeDmalMath.createIdentityMatrix();
-        this.refreshedBoudingBox = false;
 
         /**
-         * Adds a new vertex to the model
          * @param {Number} x
          * @param {Number} y
          * @param {Number} z
          */
         this.addVertex = function (x, y, z) {
             var position = that.vertices.length;
+            // TODO why 4th dimension is needed?
             that.vertices[position] = [ x, y, z, 1 ];
         };
 
         /**
-         * Adds a new triangle to the model
          * @param {Number} vertex1Position
          * @param {Number} vertex2Position
          * @param {Number} vertex3Position
          */
         this.addTriangle = function (vertex1Position, vertex2Position, vertex3Position) {
-            var position = that.index.length;
-            that.index[position] = vertex1Position;
-            that.index[position + 1] = vertex2Position;
-            that.index[position + 2] = vertex3Position;
+            var position = that.indices.length;
+            that.indices[position] = vertex1Position;
+            that.indices[position + 1] = vertex2Position;
+            that.indices[position + 2] = vertex3Position;
         };
 
         /**
-         * Updates the world matrix
-         */
-        this.refreshWorld = function () {
-            var rotationMatrix = ThreeDmalMath.createRotationMatrix(that.rotation[1], that.rotation[0], that.rotation[2]),
-                scaleMatrix = ThreeDmalMath.createScaleMatrix(that.scale[0], that.scale[1], that.scale[2]),
-                translationMatrix = ThreeDmalMath.createTranslationMatrix(that.position);
-            that.world = ThreeDmalMath.multiply(scaleMatrix, translationMatrix);
-            that.world = ThreeDmalMath.multiply(rotationMatrix, that.world);
-            that.refreshedBoudingBox = false;
-        };
-
-        /**
-         * Changes the model position
          * @param {Number} x
          * @param {Number} y
          * @param {Number} z
@@ -148,11 +84,10 @@ var ThreeDmal = {
             that.position[0] = x;
             that.position[1] = y;
             that.position[2] = z;
-            that.refreshWorld();
+            that._refreshWorldMatrix();
         };
 
         /**
-         * Changes the model rotation
          * @param {Number} x
          * @param {Number} y
          * @param {Number} z
@@ -161,11 +96,10 @@ var ThreeDmal = {
             that.rotation[0] = x;
             that.rotation[1] = y;
             that.rotation[2] = z;
-            that.refreshWorld();
+            that._refreshWorldMatrix();
         };
 
         /**
-         * Changes the model Scale
          * @param {Number} x
          * @param {Number} y
          * @param {Number} z
@@ -174,17 +108,18 @@ var ThreeDmal = {
             that.scale[0] = x;
             that.scale[1] = y;
             that.scale[2] = z;
-            that.refreshWorld();
+            that._refreshWorldMatrix();
         };
 
-        /**
-         * Get the distance between a vector and a model
-         * @param {Array} vector 3D vector with the camera position
-         * @return {Number}
-         */
-        this.getDistanceToCamera = function (vector) {
-            return Math.sqrt(((vector[0] - that.position[0]) * (vector[0] - that.position[0])) + ((vector[1] - that.position[1]) * (vector[1] - that.position[1])) + ((vector[2] - that.position[2]) * (vector[2] - that.position[2])));
+        this._refreshWorldMatrix = function () {
+            var rotationMatrix = ThreeDmalMath.createRotationMatrix(that.rotation[1], that.rotation[0], that.rotation[2]),
+                scaleMatrix = ThreeDmalMath.createScaleMatrix(that.scale[0], that.scale[1], that.scale[2]),
+                translationMatrix = ThreeDmalMath.createTranslationMatrix(that.position);
+            that.worldMatrix = ThreeDmalMath.multiplyMatrixMatrix(scaleMatrix, translationMatrix);
+            that.worldMatrix = ThreeDmalMath.multiplyMatrixMatrix(rotationMatrix, that.worldMatrix);
         };
+        
+        this._refreshWorldMatrix();
     },
 
     /**
@@ -207,85 +142,54 @@ var ThreeDmal = {
         this.height = canvas.height;
 
         /**
-         * Adds a model to the scene
          * @param {ThreeDmal.Model} model
-         * @return {Number}
          */
         this.addModel = function (model) {
             var position = that.models.length;
             that.models[position] = model;
-            return position;
         };
 
-        /**
-         * Draws the scene
-         */
         this.draw = function () {
-            that._clearScreen();
             var models = that.models;
+            that.context.clearRect(0, 0, that.width, that.height);
 
             for (var i = 0; i < models.length; i++) {
                 var model = models[i],
                     vertices = [];
 
                 for (var j = 0; j < model.vertices.length; j++) {
-                    vertices[j] = ThreeDmalMath.transformVector4(model.vertices[j], model.world);
+                    vertices[j] = ThreeDmalMath.multiplyVector4Matrix(model.vertices[j], model.worldMatrix);
                 }
 
+                const indices = model.indices,
+                trianglesCount = indices.length / 3;
                 that.context.beginPath();
-                that._drawEdges(vertices, model);
-                that.context.closePath();
-            }
-        };
-
-        /**
-         * Sets the scene's camera
-         * @param {ThreeDmal.Camera} camera
-         */
-        this.setCamera = function (camera) {
-            that.camera = camera;
-        };
-
-        /**
-         * Clears the canvas
-         */
-        this._clearScreen = function () {
-            that.context.clearRect(0, 0, that.width, that.height);
-        };
-
-        /**
-         * Draws only the model's edges
-         * @param {Array} vertices Model's vertices
-         * @param {ThreeDmal.Model} model
-         */
-        this._drawEdges = function (vertices, model) {
-            var indexes = model.index,
-                pc = that.camera.getPosition();
-            that.context.strokeStyle = "rgba(0, 0, 0, 1)";
-
-            for (var i = 0; i < indexes.length / 3; i++) {
-                var index = i * 3,
-                    p1 = vertices[indexes[index]],
-                    p2 = vertices[indexes[index + 1]],
-                    p3 = vertices[indexes[index + 2]],
-                    v1 = ThreeDmalMath.substractVector3(p1, p2),
-                    v2 = ThreeDmalMath.substractVector3(p3, p2),
-                    n = ThreeDmalMath.crossProductVector3(v1, v2),
-                    c = ThreeDmalMath.substractVector3(pc, p1),
-                    tita = ThreeDmalMath.dotProductVector3(c, n);
-
-                if (!model.backfaceCulling || tita < 0) {
-                    var vertex1 = ThreeDmalMath.project(p1, that.camera.viewproj, that.width, that.height);
-                    var vertex2 = ThreeDmalMath.project(p2, that.camera.viewproj, that.width, that.height);
-                    var vertex3 = ThreeDmalMath.project(p3, that.camera.viewproj, that.width, that.height);
+                that.context.strokeStyle = "rgba(0, 0, 0, 1)";
+    
+                for (var i = 0; i < trianglesCount; i++) {
+                    var index = i * 3,
+                        p1 = vertices[indices[index]],
+                        p2 = vertices[indices[index + 1]],
+                        p3 = vertices[indices[index + 2]],
+                        vertex1 = ThreeDmalMath.project(p1, that.camera.viewProjectionMatrix, that.width, that.height),
+                        vertex2 = ThreeDmalMath.project(p2, that.camera.viewProjectionMatrix, that.width, that.height),
+                        vertex3 = ThreeDmalMath.project(p3, that.camera.viewProjectionMatrix, that.width, that.height);
                     that.context.moveTo(vertex1[0], vertex1[1]);
                     that.context.lineTo(vertex2[0], vertex2[1]);
                     that.context.lineTo(vertex3[0], vertex3[1]);
                     that.context.lineTo(vertex1[0], vertex1[1]);
                 }
+    
+                that.context.stroke();
+                that.context.closePath();
             }
+        };
 
-            that.context.stroke();
+        /**
+         * @param {ThreeDmal.Camera} camera
+         */
+        this.setCamera = function (camera) {
+            that.camera = camera;
         };
     }
 };
@@ -293,7 +197,13 @@ var ThreeDmal = {
 var ThreeDmalMath = {
 
     /**
-     * Creates an instance of a 4x4 matrix filled with zeros
+     * Creates an instance of a 4x4 matrix filled with zeros.
+     * 
+     * The matrix is stored as a 1D array in column-major order:
+     *    0  1  2  3
+     *    4  5  6  7
+     *    8  9 10 11
+     *   12 13 14 15
      * @constructor
      * @return {ThreeDmalMath.Matrix}
      */
@@ -325,20 +235,8 @@ var ThreeDmalMath = {
     createIdentityMatrix:function () {
         var matrix = new ThreeDmalMath.Matrix();
         matrix[0] = 1;
-        matrix[1] = 0;
-        matrix[2] = 0;
-        matrix[3] = 0;
-        matrix[4] = 0;
         matrix[5] = 1;
-        matrix[6] = 0;
-        matrix[7] = 0;
-        matrix[8] = 0;
-        matrix[9] = 0;
         matrix[10] = 1;
-        matrix[11] = 0;
-        matrix[12] = 0;
-        matrix[13] = 0;
-        matrix[14] = 0;
         matrix[15] = 1;
         
         return matrix;
@@ -524,6 +422,7 @@ var ThreeDmalMath = {
         var x = (vector1[1] * vector2[2]) - (vector1[2] * vector2[1]),
             y = (vector1[2] * vector2[0]) - (vector1[0] * vector2[2]),
             z = (vector1[0] * vector2[1]) - (vector1[1] * vector2[0]);
+        
         return [x, y, z];
     },
 
@@ -540,31 +439,48 @@ var ThreeDmalMath = {
     },
 
     /**
-     * Multiplies two matrices
      * @param {ThreeDmalMath.Matrix} matrix1
      * @param {ThreeDmalMath.Matrix} matrix2
      * @return {ThreeDmalMath.Matrix}
      */
-    multiply:function (matrix1, matrix2) {
-        var matrix = new ThreeDmalMath.Matrix();
-        matrix[0] = (((matrix1[0] * matrix2[0]) + (matrix1[1] * matrix2[4])) + (matrix1[2] * matrix2[8])) + (matrix1[3] * matrix2[12]);
-        matrix[1] = (((matrix1[0] * matrix2[1]) + (matrix1[1] * matrix2[5])) + (matrix1[2] * matrix2[9])) + (matrix1[3] * matrix2[13]);
-        matrix[2] = (((matrix1[0] * matrix2[2]) + (matrix1[1] * matrix2[6])) + (matrix1[2] * matrix2[10])) + (matrix1[3] * matrix2[14]);
-        matrix[3] = (((matrix1[0] * matrix2[3]) + (matrix1[1] * matrix2[7])) + (matrix1[2] * matrix2[11])) + (matrix1[3] * matrix2[15]);
-        matrix[4] = (((matrix1[4] * matrix2[0]) + (matrix1[5] * matrix2[4])) + (matrix1[6] * matrix2[8])) + (matrix1[7] * matrix2[12]);
-        matrix[5] = (((matrix1[4] * matrix2[1]) + (matrix1[5] * matrix2[5])) + (matrix1[6] * matrix2[9])) + (matrix1[7] * matrix2[13]);
-        matrix[6] = (((matrix1[4] * matrix2[2]) + (matrix1[5] * matrix2[6])) + (matrix1[6] * matrix2[10])) + (matrix1[7] * matrix2[14]);
-        matrix[7] = (((matrix1[4] * matrix2[3]) + (matrix1[5] * matrix2[7])) + (matrix1[6] * matrix2[11])) + (matrix1[7] * matrix2[15]);
-        matrix[8] = (((matrix1[8] * matrix2[0]) + (matrix1[9] * matrix2[4])) + (matrix1[10] * matrix2[8])) + (matrix1[11] * matrix2[12]);
-        matrix[9] = (((matrix1[8] * matrix2[1]) + (matrix1[9] * matrix2[5])) + (matrix1[10] * matrix2[9])) + (matrix1[11] * matrix2[13]);
-        matrix[10] = (((matrix1[8] * matrix2[2]) + (matrix1[9] * matrix2[6])) + (matrix1[10] * matrix2[10])) + (matrix1[11] * matrix2[14]);
-        matrix[11] = (((matrix1[8] * matrix2[3]) + (matrix1[9] * matrix2[7])) + (matrix1[10] * matrix2[11])) + (matrix1[11] * matrix2[15]);
-        matrix[12] = (((matrix1[12] * matrix2[0]) + (matrix1[13] * matrix2[4])) + (matrix1[14] * matrix2[8])) + (matrix1[15] * matrix2[12]);
-        matrix[13] = (((matrix1[12] * matrix2[1]) + (matrix1[13] * matrix2[5])) + (matrix1[14] * matrix2[9])) + (matrix1[15] * matrix2[13]);
-        matrix[14] = (((matrix1[12] * matrix2[2]) + (matrix1[13] * matrix2[6])) + (matrix1[14] * matrix2[10])) + (matrix1[15] * matrix2[14]);
-        matrix[15] = (((matrix1[12] * matrix2[3]) + (matrix1[13] * matrix2[7])) + (matrix1[14] * matrix2[11])) + (matrix1[15] * matrix2[15]);
+    multiplyMatrixMatrix:function (matrix1, matrix2) {
+        var result = new ThreeDmalMath.Matrix();
+        result[0] = (matrix1[0] * matrix2[0]) + (matrix1[1] * matrix2[4]) + (matrix1[2] * matrix2[8]) + (matrix1[3] * matrix2[12]);
+        result[1] = (matrix1[0] * matrix2[1]) + (matrix1[1] * matrix2[5]) + (matrix1[2] * matrix2[9]) + (matrix1[3] * matrix2[13]);
+        result[2] = (matrix1[0] * matrix2[2]) + (matrix1[1] * matrix2[6]) + (matrix1[2] * matrix2[10]) + (matrix1[3] * matrix2[14]);
+        result[3] = (matrix1[0] * matrix2[3]) + (matrix1[1] * matrix2[7]) + (matrix1[2] * matrix2[11]) + (matrix1[3] * matrix2[15]);
+        result[4] = (matrix1[4] * matrix2[0]) + (matrix1[5] * matrix2[4]) + (matrix1[6] * matrix2[8]) + (matrix1[7] * matrix2[12]);
+        result[5] = (matrix1[4] * matrix2[1]) + (matrix1[5] * matrix2[5]) + (matrix1[6] * matrix2[9]) + (matrix1[7] * matrix2[13]);
+        result[6] = (matrix1[4] * matrix2[2]) + (matrix1[5] * matrix2[6]) + (matrix1[6] * matrix2[10]) + (matrix1[7] * matrix2[14]);
+        result[7] = (matrix1[4] * matrix2[3]) + (matrix1[5] * matrix2[7]) + (matrix1[6] * matrix2[11]) + (matrix1[7] * matrix2[15]);
+        result[8] = (matrix1[8] * matrix2[0]) + (matrix1[9] * matrix2[4]) + (matrix1[10] * matrix2[8]) + (matrix1[11] * matrix2[12]);
+        result[9] = (matrix1[8] * matrix2[1]) + (matrix1[9] * matrix2[5]) + (matrix1[10] * matrix2[9]) + (matrix1[11] * matrix2[13]);
+        result[10] = (matrix1[8] * matrix2[2]) + (matrix1[9] * matrix2[6]) + (matrix1[10] * matrix2[10]) + (matrix1[11] * matrix2[14]);
+        result[11] = (matrix1[8] * matrix2[3]) + (matrix1[9] * matrix2[7]) + (matrix1[10] * matrix2[11]) + (matrix1[11] * matrix2[15]);
+        result[12] = (matrix1[12] * matrix2[0]) + (matrix1[13] * matrix2[4]) + (matrix1[14] * matrix2[8]) + (matrix1[15] * matrix2[12]);
+        result[13] = (matrix1[12] * matrix2[1]) + (matrix1[13] * matrix2[5]) + (matrix1[14] * matrix2[9]) + (matrix1[15] * matrix2[13]);
+        result[14] = (matrix1[12] * matrix2[2]) + (matrix1[13] * matrix2[6]) + (matrix1[14] * matrix2[10]) + (matrix1[15] * matrix2[14]);
+        result[15] = (matrix1[12] * matrix2[3]) + (matrix1[13] * matrix2[7]) + (matrix1[14] * matrix2[11]) + (matrix1[15] * matrix2[15]);
 
-        return matrix;
+        return result;
+    },
+
+    /**
+     * @param {Array} vector4
+     * @param {ThreeDmalMath.Matrix} matrix
+     * @return {Array} 4D vector
+     */
+    multiplyVector4Matrix:function (vector4, matrix) {
+        var vx = vector4[0],
+            vy = vector4[1],
+            vz = vector4[2],
+            vw = vector4[3],
+            x = (((vx * matrix[0]) + (vy * matrix[4])) + (vz * matrix[8])) + (vw * matrix[12]),
+            y = (((vx * matrix[1]) + (vy * matrix[5])) + (vz * matrix[9])) + (vw * matrix[13]),
+            z = (((vx * matrix[2]) + (vy * matrix[6])) + (vz * matrix[10])) + (vw * matrix[14]),
+            w = (((vx * matrix[3]) + (vy * matrix[7])) + (vz * matrix[11])) + (vw * matrix[15]);
+
+        return [x, y, z, w];
     },
 
     /**
@@ -619,24 +535,5 @@ var ThreeDmalMath = {
             vector1[1] - vector2[1],
             vector1[2] - vector2[2]];
     },
-
-    /**
-     * Transforms a 4D point using a transformation matrix
-     * @param {Array} vector
-     * @param {ThreeDmalMath.Matrix} transformationMatrix
-     * @return {Array}
-     */
-    transformVector4:function (vector, transformationMatrix) {
-        var vx = vector[0],
-            vy = vector[1],
-            vz = vector[2],
-            vw = vector[3],
-            x = (((vx * transformationMatrix[0]) + (vy * transformationMatrix[4])) + (vz * transformationMatrix[8])) + (vw * transformationMatrix[12]),
-            y = (((vx * transformationMatrix[1]) + (vy * transformationMatrix[5])) + (vz * transformationMatrix[9])) + (vw * transformationMatrix[13]),
-            z = (((vx * transformationMatrix[2]) + (vy * transformationMatrix[6])) + (vz * transformationMatrix[10])) + (vw * transformationMatrix[14]),
-            w = (((vx * transformationMatrix[3]) + (vy * transformationMatrix[7])) + (vz * transformationMatrix[11])) + (vw * transformationMatrix[15]);
-
-        return [x, y, z, w];
-    }
 
 };
