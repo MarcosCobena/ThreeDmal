@@ -80,7 +80,7 @@ var ThreeDmal = {
          * @param {Number} y
          * @param {Number} z
          */
-        this.changePosition = function (x, y, z) {
+        this.setPosition = function (x, y, z) {
             that.position[0] = x;
             that.position[1] = y;
             that.position[2] = z;
@@ -92,7 +92,7 @@ var ThreeDmal = {
          * @param {Number} y
          * @param {Number} z
          */
-        this.changeRotation = function (x, y, z) {
+        this.setRotation = function (x, y, z) {
             that.rotation[0] = x;
             that.rotation[1] = y;
             that.rotation[2] = z;
@@ -104,7 +104,7 @@ var ThreeDmal = {
          * @param {Number} y
          * @param {Number} z
          */
-        this.changeScale = function (x, y, z) {
+        this.setScale = function (x, y, z) {
             that.scale[0] = x;
             that.scale[1] = y;
             that.scale[2] = z;
@@ -132,6 +132,7 @@ var ThreeDmal = {
         this.models = new Array();
         this.camera = null;
         this.context = null;
+
         try {
             this.context = canvas.getContext("2d");
         } catch (e) {
@@ -166,8 +167,8 @@ var ThreeDmal = {
                 that.context.beginPath();
                 that.context.strokeStyle = "rgba(0, 0, 0, 1)";
     
-                for (var i = 0; i < trianglesCount; i++) {
-                    var index = i * 3,
+                for (var k = 0; k < trianglesCount; k++) {
+                    var index = k * 3,
                         p1 = vertices[indices[index]],
                         p2 = vertices[indices[index + 1]],
                         p3 = vertices[indices[index + 2]],
@@ -229,7 +230,6 @@ var ThreeDmalMath = {
     },
 
     /**
-     * Creates an identity matrix
      * @return {ThreeDmalMath.Matrix}
      */
     createIdentityMatrix:function () {
@@ -243,7 +243,6 @@ var ThreeDmalMath = {
     },
 
     /**
-     * Creates a look-at matrix for the scene
      * @param {Array} cameraPosition Array with the camera position
      * @param {Array} cameraTarget Array with the target position
      * @param {Array} cameraUpVector Array with the camera's vector up
