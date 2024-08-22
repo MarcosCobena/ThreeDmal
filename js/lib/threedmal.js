@@ -86,20 +86,6 @@ var ThreeDmal = {
     },
 
     /**
-     * Represents a 3D point in a 4D vector
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} z
-     * @constructor
-     */
-    Point3D:function (x, y, z) {
-        this[0] = x;
-        this[1] = y;
-        this[2] = z;
-        this[3] = 1;
-    },
-
-    /**
      * Represents a model in a 3D scene
      * @param {String} id Model ID (optional)
      * @constructor
@@ -109,7 +95,6 @@ var ThreeDmal = {
         this.id = id;
         this.vertices = new Array();
         this.index = new Array();
-        this.poligons = new Array();
         this.position = [0, 0, 0];
         this.rotation = [0, 0, 0];
         this.scale = [1, 1, 1];
@@ -122,39 +107,23 @@ var ThreeDmal = {
          * @param {Number} x
          * @param {Number} y
          * @param {Number} z
-         * @return {Number}
          */
         this.addVertex = function (x, y, z) {
             var position = that.vertices.length;
-            that.vertices[position] = new ThreeDmal.Point3D(x, y, z);
-            return position;
+            that.vertices[position] = [ x, y, z, 1 ];
         };
 
         /**
          * Adds a new triangle to the model
-         * @param {Number} p1 Verex position
-         * @param {Number} p2 Verex position
-         * @param {Number} p3 Verex position
+         * @param {Number} vertex1Position
+         * @param {Number} vertex2Position
+         * @param {Number} vertex3Position
          */
-        this.addTriangle = function (p1, p2, p3) {
+        this.addTriangle = function (vertex1Position, vertex2Position, vertex3Position) {
             var position = that.index.length;
-            that.index[position] = p1;
-            that.index[position + 1] = p2;
-            that.index[position + 2] = p3;
-        };
-
-        /**
-         * Adds a new polygon to the model
-         * @param {Array} polygon Array whith all vertexs position
-         */
-        this.addPolygon = function (polygon) {
-            var position = that.poligons.length,
-                vertices = [],
-                l = polygon.length;
-            for (var i = 0; i < l; i++) {
-                vertices[i] = polygon[i];
-            }
-            that.poligons[position] = vertices;
+            that.index[position] = vertex1Position;
+            that.index[position + 1] = vertex2Position;
+            that.index[position + 2] = vertex3Position;
         };
 
         /**
@@ -299,31 +268,6 @@ var ThreeDmal = {
                     p1 = vertices[indexes[index]],
                     p2 = vertices[indexes[index + 1]],
                     p3 = vertices[indexes[index + 2]],
-                    v1 = ThreeDmal.substractVector3(p1, p2),
-                    v2 = ThreeDmal.substractVector3(p3, p2),
-                    n = ThreeDmal.crossProductVector3(v1, v2),
-                    c = ThreeDmal.substractVector3(pc, p1),
-                    tita = ThreeDmal.dotProductVector3(c, n);
-
-                if (!model.backfaceCulling || tita < 0) {
-                    var vertex1 = ThreeDmal.project(p1, that.camera.viewproj, that.width, that.height);
-                    var vertex2 = ThreeDmal.project(p2, that.camera.viewproj, that.width, that.height);
-                    var vertex3 = ThreeDmal.project(p3, that.camera.viewproj, that.width, that.height);
-                    that.context.moveTo(vertex1[0], vertex1[1]);
-                    that.context.lineTo(vertex2[0], vertex2[1]);
-                    that.context.lineTo(vertex3[0], vertex3[1]);
-                    that.context.lineTo(vertex1[0], vertex1[1]);
-                }
-            }
-
-            var polygons = model.poligons;
-
-            for (var i = 0; i < polygons.length; i++) {
-                var polygon = polygons[i],
-                    index = 0,
-                    p1 = vertices[polygon[index]],
-                    p2 = vertices[polygon[index + 1]],
-                    p3 = vertices[polygon[index + 2]],
                     v1 = ThreeDmalMath.substractVector3(p1, p2),
                     v2 = ThreeDmalMath.substractVector3(p3, p2),
                     n = ThreeDmalMath.crossProductVector3(v1, v2),
@@ -331,16 +275,13 @@ var ThreeDmal = {
                     tita = ThreeDmalMath.dotProductVector3(c, n);
 
                 if (!model.backfaceCulling || tita < 0) {
-                    var orig = ThreeDmalMath.project(vertices[polygon[0]], that.camera.viewproj, that.width, that.height);
-                    that.context.moveTo(orig[0], orig[1]);
-                    var ll = polygon.length;
-
-                    for (var j = 1; j < ll; j++) {
-                        var aux = ThreeDmalMath.project(vertices[polygon[j]], that.camera.viewproj, that.width, that.height);
-                        that.context.lineTo(aux[0], aux[1]);
-                    }
-
-                    that.context.lineTo(orig[0], orig[1]);
+                    var vertex1 = ThreeDmalMath.project(p1, that.camera.viewproj, that.width, that.height);
+                    var vertex2 = ThreeDmalMath.project(p2, that.camera.viewproj, that.width, that.height);
+                    var vertex3 = ThreeDmalMath.project(p3, that.camera.viewproj, that.width, that.height);
+                    that.context.moveTo(vertex1[0], vertex1[1]);
+                    that.context.lineTo(vertex2[0], vertex2[1]);
+                    that.context.lineTo(vertex3[0], vertex3[1]);
+                    that.context.lineTo(vertex1[0], vertex1[1]);
                 }
             }
 
