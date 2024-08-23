@@ -8,7 +8,7 @@
             var canvas = document.getElementById("canvas");
             var scene = new ThreeDmal.Scene(canvas);
             var camera = new ThreeDmal.Camera(canvas.width, canvas.height);
-            camera.setPosition([0, 5, 5]);
+            camera.setPosition(new ThreeDmalMath.Vector3(0, 5, 5));
             scene.setCamera(camera);
             var cube = new ThreeDmal.Model();
             cube.addVertex(1, -1, 1);
@@ -32,13 +32,13 @@
             cube.addTriangle(4, 0, 3);
             cube.addTriangle(4, 3, 6);
             scene.addModel(cube);
-            var yRotation = 0;
+            var rotation = new ThreeDmalMath.Vector3(0, 0, 0);
             window.requestAnimationFrame(animate);
             
             function animate() {
-                scene.models[0].setRotation(0, yRotation, 0);
+                scene.models[0].setRotation(rotation);
                 scene.draw();
-                yRotation -= 0.01;
+                rotation.y += 0.01;
                 window.requestAnimationFrame(animate);
             }
         }
